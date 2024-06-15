@@ -1,42 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
-</head>
-<body>
+  </head>
+  <body>
     <button onclick="start()">start Recording</button>
-</body>
-<script>
-    navigator.mediaDevices.getDisplayMedia({
-        video:true
+  </body>
+  <script>
+    // TODO: Move Buffer and reocrder to global scope to wokr with stop btn
+
+    let recorder;
+    const buffer = [];
+
+    function start() {
+      navigator.mediaDevices
+        .getDisplayMedia({
+          video: true,
         })
         .then((stream) => {
-            const recorder = new MediaRecorder(stream)
+          recorder = new MediaRecorder(stream);
+          recorder.start();
 
-            recorder.start()
+          recorder.addEventListener("dataavailable", (event) => {
+            buffer.push(event.data);
+          });
 
-            const buffer = []
+          recorder.addEventListener("stop", () => {
+            const blob = new Blob(buffer, {
+              type: "video/webm",
+            });
 
-            recorder.addEventListener('dataavailable',(event) => {
-                buffer.push(event.data)
-            })
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "recording.webm";
+            a.click();
+          });
 
-            recorder.addEventListener('stop',() => {
-                const blob = new Blob(buffer,{
-                })
-
-                const a = document.createElement('a')
-                a.href = URL.createObjectURL(blob)
-                a.download = "recording.mp4"
-                a.click()
-            })
-
-            setTimeout(() => {
-                recorder.stop()
-            },100000)
-
-        })
-</script>
+          setTimeout(() => {
+            recorder.stop();
+          }, 100000);
+        });
+    }
+  </script>
 </html>
+
